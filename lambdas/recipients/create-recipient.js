@@ -8,7 +8,8 @@ exports.handler = async (event, context, callback) => {
     let statusCode = 200;
     let responseBody = "";
     const headers = {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        'Access-Control-Allow-Origin': '*'
     };
     const recipient = JSON.parse(event.body);
     var params = {
