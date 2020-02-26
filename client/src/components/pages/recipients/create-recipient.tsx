@@ -1,6 +1,8 @@
 import React from 'react';
 import {Container, Grid, TextField} from "@material-ui/core";
 import Button from '@material-ui/core/Button';
+import {LAMBDAS, Recipient} from "../../../data";
+import {uuid} from "../../../utils/uuid";
 
 
 export class CreateRecipient extends React.Component<any, any> {
@@ -17,7 +19,26 @@ export class CreateRecipient extends React.Component<any, any> {
     }
     saveRecipient = () => {
         if (this.isFormValid()) {
-            console.log(this.state);
+            const recipient: Recipient = this.state as any;
+            recipient.id = uuid();
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            const body = JSON.stringify(recipient);
+            const payload = {
+                method: "POST",
+                headers,
+                body
+            }
+            fetch(LAMBDAS.CreateRecipient, payload)
+                .then(response => response.json())
+                .then(data => {
+                   console.log(data);
+                   this.backToRecipientList();
+                })
+                .catch(err => {
+                    console.error(err);
+                })
         } else {
             alert("Invalid input");
         }
