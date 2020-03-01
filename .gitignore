@@ -4,3 +4,4 @@ lambdas/mailgun/node_modules/
 node_modules/
 package-lock.json
 lambdas/mailgun/mailgun.zip
+*.zip
