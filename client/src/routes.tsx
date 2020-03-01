@@ -2,10 +2,9 @@ import React from "react";
 import {Dashboard, Dns, People} from "@material-ui/icons";
 import {DashboardMain} from "./components/pages/dashboard/dashboard-main";
 import {RecipientList} from "./components/pages/recipients/recipient-list";
-import {Campaigns} from "./components/pages/campaigns/campaigns";
-import App from "./App";
 import {Landing} from "./components/pages/landing";
 import {CreateRecipient} from "./components/pages/recipients/create-recipient";
+import {Emails} from "./components/pages/emails/emails";
 
 interface Route {
     Name: string;
@@ -41,10 +40,10 @@ export const routes: Route[] = [
         VisibleInSideNav: true
     },
     {
-        Name: "Campaigns",
+        Name: "Emails",
         Icon: <Dns/>,
-        Main: <Campaigns/>,
-        Path: "/campaigns",
+        Main: <Emails/>,
+        Path: "/emails",
         Exact: true,
         VisibleInSideNav: true
     },

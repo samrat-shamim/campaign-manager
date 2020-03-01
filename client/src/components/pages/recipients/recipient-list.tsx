@@ -9,8 +9,9 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-import {Container, GridList, GridListTile} from "@material-ui/core";
+import {Button, Container, GridList, GridListTile} from "@material-ui/core";
 import {LAMBDAS} from "../../../data";
+import SendEmailDialog from "../emails/send-email-dialog";
 
 
 export class RecipientList extends React.Component<any, any> {
@@ -18,6 +19,19 @@ export class RecipientList extends React.Component<any, any> {
         super(props);
         this.state = {recipients: []};
         this.getRecipients();
+    }
+    sendDialogOpen = true;
+    openSendDialog = () => {
+        console.log("open");
+        this.sendDialogOpen = true;
+    }
+    onSendDialogClose = () => {
+        this.sendDialogOpen = false;
+        console.log("closed");
+    }
+
+    onSendDialogSubmit = (data: any) => {
+        console.log(data);
     }
 
     render(): React.ReactElement<any, any> {
@@ -41,6 +55,7 @@ export class RecipientList extends React.Component<any, any> {
                             <TableRow>
                                 <TableCell style={{fontWeight: "bold"}}>Name</TableCell>
                                 <TableCell align="justify" style={{fontWeight: 'bold'}}>Email</TableCell>
+                                <TableCell style={{fontWeight: "bold"}}>Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -50,6 +65,9 @@ export class RecipientList extends React.Component<any, any> {
                                         {row.Name}
                                     </TableCell>
                                     <TableCell align="justify">{row.Email}</TableCell>
+                                    <TableCell align="justify">
+                                       <SendEmailDialog onSubmit={this.onSendDialogSubmit} recipient={row}/>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
