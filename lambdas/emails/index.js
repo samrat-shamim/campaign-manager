@@ -3,8 +3,8 @@
 const AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
 const mailgun = require("mailgun-js");
-const DOMAIN = 'sandboxf508153849644a7ea96924f4dde342c4.mailgun.org';
-const api_key = "51a34ba690409aacc8f9c813fd0ad46f-9dda225e-cc116559";
+const DOMAIN = process.env.mailgun_domain;
+const api_key = process.env.mailgun_api_key;
 const mg = mailgun({apiKey: api_key, domain: DOMAIN});
 
 exports.handler = async (event, context, callback) => {
