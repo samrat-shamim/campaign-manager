@@ -7,7 +7,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import {Button, Container, GridList, GridListTile} from "@material-ui/core";
-import {LAMBDAS} from "../../../data";
+import {LAMBDAS} from "../../../endpoints";
 import {Link} from "react-router-dom";
 import Fab from "@material-ui/core/Fab";
 import AddIcon from "@material-ui/icons/Add";
@@ -66,6 +66,7 @@ export class Emails extends React.Component<any, any> {
     }
 
     getEmails: any = () => {
+        this.setState({ emails: []});
         const headers = {
             'Content-Type': 'application/json'
         };

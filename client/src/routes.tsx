@@ -3,7 +3,6 @@ import {Dashboard, Dns, People} from "@material-ui/icons";
 import {DashboardMain} from "./components/pages/dashboard/dashboard-main";
 import {RecipientList} from "./components/pages/recipients/recipient-list";
 import {Landing} from "./components/pages/landing";
-import {CreateRecipient} from "./components/pages/recipients/create-recipient";
 import {Emails} from "./components/pages/emails/emails";
 
 interface Route {
@@ -46,12 +45,5 @@ export const routes: Route[] = [
         Path: "/emails",
         Exact: true,
         VisibleInSideNav: true
-    },
-    {
-        Name: "Create Recipient",
-        Main: <CreateRecipient/>,
-        Path: "/recipients/create",
-        Exact: true,
-        VisibleInSideNav: false
     }
 ];

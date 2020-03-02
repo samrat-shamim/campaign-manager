@@ -7,61 +7,43 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import {Grid} from "@material-ui/core";
-import {LAMBDAS, Recipient} from "../../../endpoints";
+import {LAMBDAS} from "../../../endpoints";
 import {uuid} from "../../../utils/uuid";
-interface SendEmailDialogProps {
-    onSubmit: Function;
-    recipient: Recipient
-}
-interface EmailData {
-    id: string;
-    to: string;
-    from: string;
-    subject: string;
-    text: string;
-    recipient: string;
-}
+import Fab from "@material-ui/core/Fab";
+import AddIcon from "@material-ui/icons/Add";
+import {Recipient} from "./recipient";
 
-export default function SendEmailDialog(props: SendEmailDialogProps) {
+export default function CreateRecipientDialog(props: {onCreated: Function}) {
     const [open, setOpen] = React.useState(false);
-    const emailData: any = {
-        Sender: "testsender@yopmail.com"
-    };
-
+    const recipient: Recipient = {} as any;
     const handleClickOpen = () => {
         setOpen(true);
     };
     const handleChange = ({target}: any) => {
         const key: string = target.name;
-        emailData[key] = target.value;
+        (recipient as any)[key] = target.value;
     };
 
     const handleClose = () => {
         setOpen(false);
     };
     const onSubmit = () => {
-        if (emailData.Sender && emailData.Subject && emailData.Body) {
+        if (recipient.Name && recipient.Email) {
             setOpen(false);
             const headers = {
                 'Content-Type': 'application/json'
             };
-            const mailgunData: EmailData = {
-                id: uuid(),
-                from: emailData.Sender,
-                to: props.recipient.Email,
-                subject: emailData.Subject,
-                text: emailData.Body,
-                recipient: props.recipient.id
-            }
-            const body = JSON.stringify(mailgunData);
+           recipient.id = uuid();
+            const body = JSON.stringify(recipient);
             const payload = {
                 method: "POST",
                 headers,
                 body
             }
-            fetch(LAMBDAS.SendEmail, payload)
+            fetch(LAMBDAS.CreateRecipient, payload)
                 .then(response => response.json())
                 .then(data => {
+                    props.onCreated();
                     console.log(data);
                 })
                 .catch(err => {
@@ -72,21 +54,21 @@ export default function SendEmailDialog(props: SendEmailDialogProps) {
     }
     return (
         <div>
-            <Button variant="contained" color={'primary'} onClick={handleClickOpen}>Send Email</Button>
+            <Fab color="primary" aria-label="add" onClick={handleClickOpen}>
+                <AddIcon/>
+            </Fab>
             <Dialog open={open} onClose={handleClose} aria-labelledby="form-dialog-title">
-                <DialogTitle id="email-dialog-title">Send Email</DialogTitle>
+                <DialogTitle id="email-dialog-title">Create Recipient</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Recipient {props.recipient.Name}
+                        Enter recipient data
                     </DialogContentText>
                     <Grid >
                         <Grid item>
                             <form>
-                                <TextField value={emailData.Sender} name="Sender" label="Sender" type="text" fullWidth
+                                <TextField value={recipient.Name} name="Name" label="Name" type="text" fullWidth
                                            onChange={handleChange} required></TextField>
-                                <TextField value={emailData.Subject} name="Subject" label="Subject" type="text" fullWidth
-                                           onChange={handleChange} required></TextField>
-                                <TextField multiline rows={3} value={emailData.Body} name="Body" label="Body" type={'text'} fullWidth
+                                <TextField value={recipient.Email} name="Email" label="Email" type={'email'} fullWidth
                                            onChange={handleChange} required></TextField>
                             </form>
                         </Grid>
@@ -97,7 +79,7 @@ export default function SendEmailDialog(props: SendEmailDialogProps) {
                         Cancel
                     </Button>
                     <Button onClick={onSubmit} color="primary" variant={"contained"}>
-                        Send
+                        Save
                     </Button>
                 </DialogActions>
             </Dialog>

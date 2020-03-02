@@ -1,7 +1,4 @@
 import React from 'react';
-import Fab from '@material-ui/core/Fab';
-import AddIcon from '@material-ui/icons/Add';
-import {Link} from "react-router-dom";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -10,8 +7,9 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import {Button, Container, GridList, GridListTile} from "@material-ui/core";
-import {LAMBDAS} from "../../../data";
+import {LAMBDAS} from "../../../endpoints";
 import SendEmailDialog from "../emails/send-email-dialog";
+import CreateRecipientDialog from "./create-recipient-dialog";
 
 
 export class RecipientList extends React.Component<any, any> {
@@ -20,18 +18,11 @@ export class RecipientList extends React.Component<any, any> {
         this.state = {recipients: []};
         this.getRecipients();
     }
-    sendDialogOpen = true;
-    openSendDialog = () => {
-        console.log("open");
-        this.sendDialogOpen = true;
-    }
-    onSendDialogClose = () => {
-        this.sendDialogOpen = false;
-        console.log("closed");
-    }
-
     onSendDialogSubmit = (data: any) => {
         console.log(data);
+    }
+    onRecipientCreate = () => {
+        this.getRecipients();
     }
 
     render(): React.ReactElement<any, any> {
@@ -42,11 +33,7 @@ export class RecipientList extends React.Component<any, any> {
                         <h1>Recipients</h1>
                     </GridListTile>
                     <GridListTile style={{paddingTop: '5px'}}>
-                        <Link to={'recipients/create'}>
-                            <Fab color="primary" aria-label="add">
-                                <AddIcon/>
-                            </Fab>
-                        </Link>
+                        <CreateRecipientDialog onCreated={this.onRecipientCreate}/>
                     </GridListTile>
                 </GridList>
                 <TableContainer component={Paper}>
@@ -78,6 +65,7 @@ export class RecipientList extends React.Component<any, any> {
     }
 
     getRecipients: any = () => {
+        this.setState({ recipients: []});
         const headers = {
             'Content-Type': 'application/json'
         };
