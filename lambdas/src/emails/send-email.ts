@@ -1,13 +1,11 @@
 //invokeurl: https://gzbqn7xvgd.execute-api.us-east-1.amazonaws.com/beta/mail/send
-
 const AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
 const mailgun = require("mailgun-js");
-const DOMAIN = process.env.mailgun_domain;
-const api_key = process.env.mailgun_api_key;
-const mg = mailgun({apiKey: api_key, domain: DOMAIN});
-
-exports.handler = async (event, context, callback) => {
+export const sendEmail = async (event) => {
+    const DOMAIN = process.env.mailgun_domain;
+    const api_key = process.env.mailgun_api_key;
+    const mg = mailgun({apiKey: api_key, domain: DOMAIN});
     const docClient = new AWS.DynamoDB.DocumentClient();
     let statusCode = 200;
     let responseBody = "";
@@ -28,7 +26,7 @@ exports.handler = async (event, context, callback) => {
         const data = await docClient.put(params).promise();
         responseBody = JSON.stringify(mailgunResponse);
     } catch (e) {
-        responseBody = `Unable to create email: ${e}`;
+        responseBody = `Unable to send email: ${e}`;
         statusCode = 403;
     }
     const response = {

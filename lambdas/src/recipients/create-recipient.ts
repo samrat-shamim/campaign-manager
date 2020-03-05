@@ -1,9 +1,7 @@
 //invokeurl: https://6r6cpkzwaj.execute-api.us-east-1.amazonaws.com/beta/recipients/create
-
 const AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
-
-exports.handler = async (event, context, callback) => {
+export const createRecipient = async (event) => {
     const docClient = new AWS.DynamoDB.DocumentClient();
     let statusCode = 200;
     let responseBody = "";

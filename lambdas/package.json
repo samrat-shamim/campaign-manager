@@ -1,0 +1,22 @@
+{
+  "name": "campaign-manager-lambdas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "postbuild": "xcopy /E /I node_modules dist\\node_modules",
+    "watch": "tsc -w"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^13.7.7",
+    "aws-sdk": "^2.633.0",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "mailgun-js": "^0.22.0"
+  }
+}

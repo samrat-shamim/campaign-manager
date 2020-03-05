@@ -50,7 +50,6 @@ export default function CreateRecipientDialog(props: {onCreated: Function}) {
                     console.error(err);
                 })
         }
-
     }
     return (
         <div>

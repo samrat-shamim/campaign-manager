@@ -1,10 +1,7 @@
 // invokeurl: https://gzbqn7xvgd.execute-api.us-east-1.amazonaws.com/beta/mail
-
-
 const AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
-
-exports.handler = async (event, context, callback) => {
+export const getEmails = async (event) => {
     const docClient = new AWS.DynamoDB.DocumentClient();
     let statusCode = 200;
     let responseBody = "";

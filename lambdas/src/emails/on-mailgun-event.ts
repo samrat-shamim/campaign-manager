@@ -1,9 +1,7 @@
 //invokeurl: https://42n9v8oae7.execute-api.us-east-1.amazonaws.com/beta/mail-event/dispatch
-
 const AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
-
-exports.handler = async (event, context, callback) => {
+export const onMailgunEvent = async (event) => {
     const docClient = new AWS.DynamoDB.DocumentClient();
     let statusCode = 200;
     let responseBody = "";
@@ -45,7 +43,7 @@ exports.handler = async (event, context, callback) => {
             statusCode = 200;
             responseBody = JSON.stringify(data);
         } else {
-            statusCode = "500";
+            statusCode = 500;
             responseBody = "Event data is not present in the request payload"
         }
     } catch (e) {
