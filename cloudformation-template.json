@@ -1,0 +1,324 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "Creates an API gateway that's backed by a Lambda function",
+
+  "Parameters": {
+    "APIName": {
+      "Description": "Name of the API to create",
+      "Type": "String",
+      "AllowedPattern": "[A-Za-z0-9]*",
+      "MinLength": "4",
+      "MaxLength": "2048",
+      "ConstraintDescription": "must contain only alphanumeric characters (at least four)"
+    },
+    "APIDescription": {
+      "Description": "Description of the API to create",
+      "Type": "String",
+      "Default": "No description provided. Provide 'APIDescription' param to override this."
+    },
+    "APIPath": {
+      "Description": "URL path for the API",
+      "Type": "String",
+      "Default": "api",
+      "AllowedPattern": "[A-Za-z0-9]*",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "ConstraintDescription": "must contain only alphanumeric characters (1-64 chars)"
+    },
+    "APIStageName": {
+      "Description": "Stage name to deploy the API to",
+      "Type": "String",
+      "Default": "dev",
+      "AllowedPattern": "[A-Za-z0-9]*",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "ConstraintDescription": "must contain only alphanumeric characters (1-64 chars)"
+    }
+  },
+
+  "Resources": {
+    "BackingLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": { "Ref": "campaign-manager-lambdas" },
+          "S3Key": { "Ref": "dist.zip" }
+        },
+        "FunctionName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, { "Ref": "APIName" } ] ] },
+        "Handler": "index.getRecipients",
+        "MemorySize": "128",
+        "Role": { "Fn::GetAtt": [ "BackingLambdaExecutionRole", "Arn" ] },
+        "Runtime": "Node.js 12.x",
+        "Timeout": "3"
+      }
+    },
+    "BackingLambdaInvokePermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": { "Fn::GetAtt": [ "BackingLambdaFunction", "Arn" ] },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com"
+      }
+    },
+    "BackingLambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [ "lambda.amazonaws.com" ]
+              },
+              "Action": [ "sts:AssumeRole" ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "UseDBPolicy" ] ] },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:DeleteItem",
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:dynamodb:",
+                        { "Ref": "AWS::Region" },
+                        ":",
+                        { "Ref": "AWS::AccountId" },
+                        ":table/",
+                        { "Ref": "APIDynamoDBTable" }
+                      ]
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "APIDynamoDBTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "GUID",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "DueDate",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "GUID",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "DueDate",
+            "KeyType": "RANGE"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits":1,
+          "WriteCapacityUnits": 1
+        }
+      }
+    },
+    "IAMAPIServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "LambdaAPIServiceRole",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "API_Service_Role_Policy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": "lambda:InvokeFunction",
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "BackingLambdaFunction",
+                      "Arn"
+                    ]
+                  },
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "RestAPI": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Description": "API to get Car Image",
+        "Name": "Get_Car API",
+        "Body": {
+          "swagger": "2.0",
+          "info": {
+            "description": "API to return Car Image",
+            "version": "1.0.0",
+            "title": "Get_Car API"
+          },
+          "schemes": [
+            "https"
+          ],
+          "paths": {
+            "/get_car": {
+              "post": {
+                "produces": [
+                  "application/json"
+                ],
+                "x-amazon-apigateway-integration": {
+                  "responses": {
+                    "default": {
+                      "statusCode": "200"
+                    }
+                  },
+                  "uri": {
+                    "Fn::Join": [
+                      ":",
+                      [
+                        "arn:aws:apigateway",
+                        {
+                          "Ref": "AWS::Region"
+                        },
+                        "lambda:path/2015-03-31/functions/arn:aws:lambda",
+                        {
+                          "Ref": "AWS::Region"
+                        },
+                        {
+                          "Ref": "AWS::AccountId"
+                        },
+                        "function",
+                        {
+                          "Fn::Join": [
+                            "",
+                            [
+                              {
+                                "Ref": "BackingLambdaFunction"
+                              },
+                              "/invocations"
+                            ]
+                          ]
+                        }
+                      ]
+                    ]
+                  },
+                  "passthroughBehavior": "when_no_match",
+                  "httpMethod": "POST",
+                  "contentHandling": "CONVERT_TO_TEXT",
+                  "credentials": {
+                    "Fn::GetAtt": [
+                      "IAMAPIServiceRole",
+                      "Arn"
+                    ]
+                  },
+                  "type": "aws"
+                }
+              }
+            }
+          },
+          "securityDefinitions": {
+            "sigv4": {
+              "type": "apiKey",
+              "name": "Authorization",
+              "in": "header",
+              "x-amazon-apigateway-authtype": "awsSigv4"
+            }
+          },
+          "definitions": {
+            "Empty": {
+              "type": "object",
+              "title": "Empty Schema"
+            }
+          }
+        }
+      }
+    },
+    "RestAPIStage": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "RestAPIDeployment"
+        },
+        "MethodSettings": [
+          {
+            "DataTraceEnabled": true,
+            "HttpMethod": "*",
+            "LoggingLevel": "INFO",
+            "ResourcePath": "/*"
+          }
+        ],
+        "RestApiId": {
+          "Ref": "RestAPI"
+        },
+        "StageName": "dev"
+      }
+    },
+    "RestAPIDeployment": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "DependsOn": [
+        "RestAPI"
+      ],
+      "Properties": {
+        "RestApiId": {
+          "Ref": "RestAPI"
+        },
+        "StageName": "dummy"
+      }
+    }
+  },
+
+  "Outputs": {
+    "LambdaName": {
+      "Value": { "Ref": "BackingLambdaFunction" },
+      "Description": "The Lambda function"
+    },
+    "TableName": {
+      "Value": { "Ref": "APIDynamoDBTable" },
+      "Description": "The DynamoDB table"
+    }
+  }
+}
